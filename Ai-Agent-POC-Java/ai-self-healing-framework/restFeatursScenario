@@ -1,0 +1,62 @@
+# ── POST /login ───────────────────────────────────────────────────────────────
+  Scenario: POST /login creates a new login record
+    When I send a POST request to "/login" with body:
+      """
+      {
+        "username": "testuser",
+        "email":    "testuser@example.com",
+        "password": "secure123"
+      }
+      """
+    Then the response status code should be 201
+    And the response body field "data.email" should equal "testuser@example.com"
+    And the response body field "data.status" should equal "active"
+
+  # ── GET /login/:id ────────────────────────────────────────────────────────────
+  zScenario: GET /login/:id retrieves a specific login record
+    Given a login record exists with body:
+      """
+      {
+        "username": "gettest",
+        "email":    "gettest@example.com",
+        "password": "pass123"
+      }
+      """
+    When I send a GET request to "/login/{stored-id}"
+    Then the response status code should be 200
+    And the response body field "data.email" should equal "gettest@example.com"
+    And the response body field "data.status" should equal "active"
+
+  # ── PUT /login/:id ────────────────────────────────────────────────────────────
+  Scenario: PUT /login/:id updates an existing login record
+    Given a login record exists with body:
+      """
+      {
+        "username": "puttest",
+        "email":    "puttest@example.com",
+        "password": "pass123"
+      }
+      """
+    When I send a PUT request to "/login/{stored-id}" with body:
+      """
+      {
+        "username": "putupdated",
+        "email":    "putupdated@example.com",
+        "password": "newpass456"
+      }
+      """
+    Then the response status code should be 200
+    And the response body field "data.email" should equal "putupdated@example.com"
+
+  # ── DELETE /login/:id ─────────────────────────────────────────────────────────
+  Scenario: DELETE /login/:id removes a login record
+    Given a login record exists with body:
+      """
+      {
+        "username": "deltest",
+        "email":    "deltest@example.com",
+        "password": "pass123"
+      }
+      """
+    When I send a DELETE request to "/login/{stored-id}"
+    Then the response status code should be 200

@@ -1,3 +1,8 @@
 # Ignore environment variables and node modules
 .env
 node_modules
+
+# Ignore nested env files and macOS metadata
+.env
+**/.env
+.DS_Store

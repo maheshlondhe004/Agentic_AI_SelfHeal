@@ -1,0 +1,50 @@
+{
+    "login-username": {
+        "id": "login-username",
+        "primary": "#username",
+        "alternatives": [
+            "input[name='username']",
+            "input[type='text']"
+        ],
+        "description": "Username input — id='username' in local HTML demo page"
+    },
+    "login-password": {
+        "id": "login-password",
+        "primary": "#password",
+        "alternatives": [
+            "input[name='password']",
+            "input[type='password']"
+        ],
+        "description": "Password input — id='password' in local HTML demo page"
+    },
+    "login-submit": {
+        "id": "login-submit",
+        "primary": "#loginBtn",
+        "alternatives": [
+            "button[type='button']",
+            "button[type='submit']",
+            "button.radius"
+        ],
+        "description": "Login button — id='loginBtn' in local HTML demo page"
+    },
+    "login-error-message": {
+        "id": "login-error-message",
+        "primary": "#error-msg",
+        "alternatives": [
+            ".flash.error",
+            ".alert-danger",
+            "#flash.error"
+        ],
+        "description": "Error message div — id='error-msg' in local HTML demo page"
+    },
+    "login-success-message": {
+        "id": "login-success-message",
+        "primary": "#success-msg",
+        "alternatives": [
+            ".flash.success",
+            ".alert-success",
+            "#flash.success"
+        ],
+        "description": "Success message div — id='success-msg' in local HTML demo page"
+    }
+}

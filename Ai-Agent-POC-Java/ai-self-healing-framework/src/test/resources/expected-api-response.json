@@ -1,0 +1,51 @@
+[ {
+  "url" : "/login/create",
+  "method" : "POST",
+  "timestamp" : "2026-04-12T10:00:00",
+  "expectedStatus" : 201,
+  "requestBody" : {
+    "fullName" : "Sonal",
+    "email" : "sonal@test.com"
+  },
+  "responseBody" : {
+    "userId" : 101,
+    "fullName" : "Sonal",
+    "email" : "sonal@test.com",
+    "role" : "USER"
+  }
+}, {
+  "url" : "/login",
+  "method" : "GET",
+  "expectedStatus" : 200,
+  "responseBody" : {
+    "success" : true,
+    "message" : "All logins retrieved successfully",
+    "data" : [ {
+      "userId" : 1,
+      "name" : "john",
+      "email" : "user1@example.com",
+      "status" : "active"
+    }, {
+      "userId" : 2,
+      "name" : "user2",
+      "email" : "user2@example.com",
+      "status" : "inactive"
+    }, {
+      "userId" : 3,
+      "name" : "user3",
+      "email" : "user3@example.com",
+      "status" : "inactive"
+    } ],
+    "count" : 3
+  }
+}, {
+  "url" : "/login/101",
+  "method" : "GET",
+  "timestamp" : "2026-04-12T10:02:00",
+  "expectedStatus" : 200,
+  "responseBody" : {
+    "userId" : 101,
+    "fullName" : "Sonal",
+    "email" : "sonal@test.com"
+  }
+} ]
