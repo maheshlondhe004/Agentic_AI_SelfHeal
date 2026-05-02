@@ -7,9 +7,9 @@ app.use(express.json());
 
 // Hardcoded login data
 const loginDatabase = {
-  1: { userId: 1, name: 'john', email: 'user1@example.com', status: 'active' },
-  2: { userId: 2, name: 'user2', email: 'user2@example.com', status: 'inactive' },
-  3: { userId: 3, name: 'user3', email: 'user3@example.com', status: 'inactive' }
+  1: { id: 1, username: 'bon', email: 'user1@example.com', status: 'active' },
+  2: { id: 2, username: 'user2', email: 'user2@example.com', status: 'inactive' },
+  3: { id: 3, username: 'user3', email: 'user3@example.com', status: 'inactive' }
 };
 
 // GET - Get all logins

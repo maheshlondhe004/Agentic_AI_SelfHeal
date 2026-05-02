@@ -4,6 +4,7 @@ import api.ApiSelfHealer;
 import api.ApiValidator;
 import api.ApiValidator.ApiCallResult;
 import api.ApiValidator.BodyCompareResult;
+import api.healing.PostHealingOrchestrator;
 import core.DriverManager;
 import core.SelfHealingDriver;
 import org.slf4j.Logger;
@@ -64,6 +65,7 @@ public class ApiAndUiTest {
     // ── Shared state ──────────────────────────────────────────────────────────
     private ApiValidator apiValidator;
     private ApiSelfHealer selfHealer;
+    private PostHealingOrchestrator postHealingOrchestrator;
     private ApiCallResult apiResult; // cached so body check reuses the response
     private SelfHealingDriver driver;
     private LoginPage loginPage;
@@ -75,6 +77,7 @@ public class ApiAndUiTest {
     public void setUp() {
         apiValidator = new ApiValidator();
         selfHealer = new ApiSelfHealer();
+        postHealingOrchestrator = new PostHealingOrchestrator();
 
         // Compute absolute file:// URL for the local HTML page
         localHtmlUrl = Paths.get("src/main/resources/test-page/login.html")
@@ -136,6 +139,7 @@ public class ApiAndUiTest {
             boolean healed = selfHealer.heal(API_URL, apiResult.body(), result);
 
             if (healed) {
+                postHealingOrchestrator.reconcile(selfHealer.getLastHealingSession());
                 log.info("🔁 Self-healing applied — re-comparing with updated expected JSON…");
                 result = apiValidator.compareBody(apiResult.body(), EXPECTED_RESOURCE);
             } else {

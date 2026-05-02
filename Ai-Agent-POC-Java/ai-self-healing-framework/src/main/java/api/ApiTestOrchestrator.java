@@ -1,5 +1,6 @@
 package api;
 
+import api.healing.PostHealingOrchestrator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ public class ApiTestOrchestrator {
     private final ApiClient client;
     private final ApiValidator validator;
     private final ApiSelfHealer selfHealer;
+    private final PostHealingOrchestrator postHealingOrchestrator;
     private final BaselineManager baselineManager;
     private final ObjectMapper mapper;
 
@@ -40,6 +42,7 @@ public class ApiTestOrchestrator {
         this.client = new ApiClient();
         this.validator = new ApiValidator();
         this.selfHealer = new ApiSelfHealer();
+        this.postHealingOrchestrator = new PostHealingOrchestrator();
         this.baselineManager = new BaselineManager();
         this.mapper = new ObjectMapper();
         ApiResponseRecorder.getInstance().reset();
@@ -176,9 +179,21 @@ public class ApiTestOrchestrator {
             baselineManager.saveBaseline(endpointKey, healedNormalizedResponse);
 
             // ─────────────────────────────────────────────────────────
-            // STEP 6: Re-run API Call After Healing
+            // STEP 6: Run JSON Diff (old vs new) + update downstream layers
             // ─────────────────────────────────────────────────────────
-            log.info("STEP 6: Re-running API call after healing...");
+            log.info("STEP 6: Running post-heal JSON diff and schema reconciliation...");
+            PostHealingOrchestrator.HealingExtensionReport extensionReport =
+                    postHealingOrchestrator.reconcile(selfHealer.getLastHealingSession());
+            log.info("STEP 7: Schema SSOT synchronized");
+            log.info("STEP 8: Dependency analysis completed — {} usage(s) discovered",
+                    extensionReport.dependencyGraph().usageCount());
+            log.info("STEP 9: AST/Gherkin refactoring {}",
+                    extensionReport.changedAnything() ? "applied where required" : "skipped (no downstream changes required)");
+
+            // ─────────────────────────────────────────────────────────
+            // STEP 10: Re-run API Call After Healing
+            // ─────────────────────────────────────────────────────────
+            log.info("STEP 10: Re-running API call after healing...");
             ApiClient.ApiCallResult rerunResponse = client.get(url);
 
             if (rerunResponse.hasFailed()) {
@@ -200,9 +215,9 @@ public class ApiTestOrchestrator {
             result.setResponseBody(rerunResponse.body()); // Update with rerun response
 
             // ─────────────────────────────────────────────────────────
-            // STEP 7: Re-validate After Healing and Rerun
+            // STEP 11: Re-validate After Healing and Rerun
             // ─────────────────────────────────────────────────────────
-            log.info("STEP 7: Re-validating after healing and rerun...");
+            log.info("STEP 11: Re-validating after healing and rerun...");
             String updatedBaseline = baselineManager.loadBaseline(endpointKey);
             String normalizedUpdatedBaseline = normalizeResponseForComparison(updatedBaseline);
             String normalizedRerunResponse = normalizeResponseForComparison(rerunResponse.body());
@@ -221,6 +236,8 @@ public class ApiTestOrchestrator {
                 postHealDiff.forEach((k, v) -> log.error("   [{}] expected={} | actual={}", k, v[0], v[1]));
                 log.info("🔄 Rerun result: FAILED");
             }
+
+            log.info("Healing action log: {}", extensionReport.diffResult().summary());
 
             log.info("🏁 Final status for {}: {}", url, result.status);
 

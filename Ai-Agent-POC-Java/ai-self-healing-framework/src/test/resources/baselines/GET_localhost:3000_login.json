@@ -1,1 +1,25 @@
-{"success":true,"message":"All logins retrieved successfully","data":[{"userId":1,"name":"john","email":"user1@example.com","status":"active"},{"userId":2,"name":"user2","email":"user2@example.com","status":"inactive"},{"userId":3,"name":"user3","email":"user3@example.com","status":"inactive"}],"count":3}
+{
+    "success": true,
+    "message": "All logins retrieved successfully",
+    "data": [
+        {
+            "id": 1,
+            "username": "bon",
+            "email": "user1@example.com",
+            "status": "active"
+        },
+        {
+            "id": 2,
+            "username": "user2",
+            "email": "user2@example.com",
+            "status": "inactive"
+        },
+        {
+            "id": 3,
+            "username": "user3",
+            "email": "user3@example.com",
+            "status": "inactive"
+        }
+    ],
+    "count": 3
+}

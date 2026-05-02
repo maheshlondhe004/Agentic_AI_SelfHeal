@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
@@ -28,14 +27,12 @@ public class ApiSelfHealer {
 
     private static final Logger log = LoggerFactory.getLogger(ApiSelfHealer.class);
 
-    private static final String EXPECTED_JSON_PATH = "src/test/resources/expected-api-response.json";
-    private static final String FEATURE_FILE_PATH = "src/test/resources/features/login-api.feature";
-
     private final ApiHealingAgent agent;
     private final ApiValidator validator;
     private final ObjectMapper mapper = new ObjectMapper();
 
     private boolean healingPerformed = false;
+    private HealingSession lastHealingSession;
 
     public ApiSelfHealer() {
         this.agent = new ApiHealingAgent();
@@ -65,6 +62,7 @@ public class ApiSelfHealer {
         log.warn("Diff:\n{}", compareResult.diffSummary());
 
         try {
+            HealingTarget healingTarget = resolveHealingTarget(endpointUrl);
             ApiHealingAgent.ApiHealingResult result = agent.analyze(
                     endpointUrl,
                     actualBody,
@@ -75,12 +73,12 @@ public class ApiSelfHealer {
             if (result.updatedExpectedJson() != null
                     && !result.updatedExpectedJson().isBlank()
                     && !result.updatedExpectedJson().equals("null")) {
-                persistExpectedJson(result.updatedExpectedJson(), endpointUrl);
+                persistExpectedJson(result.updatedExpectedJson(), endpointUrl, healingTarget);
             }
 
             // 2. Patch the Cucumber feature file
             if (!result.featureFileUpdates().isEmpty()) {
-                patchFeatureFile(result.featureFileUpdates());
+                patchFeatureFile(result.featureFileUpdates(), healingTarget);
             }
 
             // 3. Patch the step definition files
@@ -88,6 +86,14 @@ public class ApiSelfHealer {
                 patchStepDefinitionFiles(result.stepDefinitionUpdates());
             }
 
+            lastHealingSession = new HealingSession(
+                    endpointUrl,
+                    healingTarget.method(),
+                    healingTarget.expectedResource(),
+                    healingTarget.featureFilePath(),
+                    compareResult.expectedJson(),
+                    result.updatedExpectedJson(),
+                    healingTarget.expectedStatus());
             healingPerformed = true;
             log.info("✅ Self-healing complete. Reasoning: {}", result.reasoning());
             return true;
@@ -121,11 +127,12 @@ public class ApiSelfHealer {
         String fakeDiff = String.format("  [%s] expected=%s | actual=%s", failedField, expected, actual);
 
         try {
+            HealingTarget healingTarget = resolveHealingTarget(endpointUrl);
             ApiHealingAgent.ApiHealingResult result = agent.analyze(
                     endpointUrl, actualBody, fakeExpected, fakeDiff);
 
             if (!result.featureFileUpdates().isEmpty()) {
-                patchFeatureFile(result.featureFileUpdates());
+                patchFeatureFile(result.featureFileUpdates(), healingTarget);
                 healingPerformed = true;
             }
 
@@ -149,15 +156,18 @@ public class ApiSelfHealer {
         return healingPerformed;
     }
 
+    public HealingSession getLastHealingSession() {
+        return lastHealingSession;
+    }
+
     // ── Persistence ───────────────────────────────────────────────────────────
 
-    private void persistExpectedJson(String updatedJson, String endpointUrl) throws IOException {
-        Path path = Paths.get(EXPECTED_JSON_PATH);
+    private void persistExpectedJson(String updatedJson, String endpointUrl, HealingTarget healingTarget) throws IOException {
+        Path path = Paths.get(healingTarget.expectedResourcePath());
         Files.createDirectories(path.getParent());
 
-        // Extract url and method
-        String url = endpointUrl.replace("http://localhost:3000", "").replace("https://localhost:3000", "");
-        String method = "GET"; // Assume GET for now
+        String url = healingTarget.endpointPath();
+        String method = healingTarget.method();
 
         // Load current expected as list
         List<Map<String, Object>> expectedList = new ArrayList<>();
@@ -211,10 +221,11 @@ public class ApiSelfHealer {
         }
     }
 
-    private void patchFeatureFile(List<ApiHealingAgent.ApiHealingResult.FeatureFileUpdate> updates)
+    private void patchFeatureFile(List<ApiHealingAgent.ApiHealingResult.FeatureFileUpdate> updates,
+                                  HealingTarget healingTarget)
             throws IOException {
         for (ApiHealingAgent.ApiHealingResult.FeatureFileUpdate update : updates) {
-            Path path = Paths.get(FEATURE_FILE_PATH);
+            Path path = Paths.get(healingTarget.featureFilePath());
             if (!Files.exists(path)) {
                 log.warn("Feature file not found at: {}", path.toAbsolutePath());
                 continue;
@@ -227,8 +238,53 @@ public class ApiSelfHealer {
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
                 log.info("Feature file patched: {} → {}", update.oldStep(), update.newStep());
             } else {
-                log.warn("Could not find old step to patch in {}: '{}'", FEATURE_FILE_PATH, update.oldStep());
+                log.warn("Could not find old step to patch in {}: '{}'", healingTarget.featureFilePath(), update.oldStep());
             }
         }
+    }
+
+    private HealingTarget resolveHealingTarget(String endpointUrl) {
+        String path = extractPath(endpointUrl);
+        if (path.matches("/login/\\d+")) {
+            return new HealingTarget(
+                    "GET",
+                    200,
+                    path,
+                    "user-api-expected-response.json",
+                    "src/test/resources/user-api-expected-response.json",
+                    "src/test/resources/features/user-api.feature");
+        }
+        return new HealingTarget(
+                "GET",
+                200,
+                path,
+                "expected-api-response.json",
+                "src/test/resources/expected-api-response.json",
+                "src/test/resources/features/login-api.feature");
+    }
+
+    private String extractPath(String endpointUrl) {
+        try {
+            return java.net.URI.create(endpointUrl).getPath();
+        } catch (Exception e) {
+            return endpointUrl;
+        }
+    }
+
+    public record HealingSession(String endpointUrl,
+                                 String method,
+                                 String expectedResource,
+                                 String featureFilePath,
+                                 String previousExpectedJson,
+                                 String updatedExpectedJson,
+                                 int expectedStatus) {
+    }
+
+    private record HealingTarget(String method,
+                                 int expectedStatus,
+                                 String endpointPath,
+                                 String expectedResource,
+                                 String expectedResourcePath,
+                                 String featureFilePath) {
     }
 }

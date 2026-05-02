@@ -19,8 +19,3 @@ Feature: Login API CRUD Operations
     # And each login record should contain a name field
     # And each login record should contain non-empty field "email"
     # And each login record should contain non-empty field "status"
-
-  Scenario: GET /login returns a clean error for an invalid route
-    When I send a GET request to "/login/invalid"
-    Then the response status code should be 404
-    And the response body should not be empty

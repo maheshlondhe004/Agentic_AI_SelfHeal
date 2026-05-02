@@ -1,0 +1,135 @@
+{
+  "endpoints" : [ {
+    "method" : "GET",
+    "path" : "/login",
+    "expectedResource" : "expected-api-response.json",
+    "expectedStatus" : 200,
+    "responseBody" : {
+      "success" : true,
+      "message" : "All logins retrieved successfully",
+      "data" : [ {
+        "id" : 1,
+        "username" : "bon",
+        "email" : "user1@example.com",
+        "status" : "active"
+      }, {
+        "id" : 2,
+        "username" : "user2",
+        "email" : "user2@example.com",
+        "status" : "inactive"
+      }, {
+        "id" : 3,
+        "username" : "user3",
+        "email" : "user3@example.com",
+        "status" : "inactive"
+      } ],
+      "count" : 3
+    },
+    "fieldAliases" : {
+      "success" : [ "success" ],
+      "message" : [ "message" ],
+      "count" : [ "count" ],
+      "data[0].userId" : [ "data[0].id", "data[0].userId" ],
+      "userId" : [ "data[0].id", "data[1].id", "data[2].id" ],
+      "id" : [ "data[0].id", "data[1].id", "data[2].id" ],
+      "data[1].userId" : [ "data[1].id", "data[1].userId" ],
+      "data[1].name" : [ "data[1].username", "data[1].name" ],
+      "name" : [ "data[1].username", "data[2].username" ],
+      "username" : [ "data[1].username", "data[2].username" ],
+      "data[2].userId" : [ "data[2].id", "data[2].userId" ],
+      "data[2].name" : [ "data[2].username", "data[2].name" ]
+    },
+    "fallbacks" : {
+      "data[0].userId" : [ "data[0].id" ],
+      "data[1].userId" : [ "data[1].id" ],
+      "data[1].name" : [ "data[1].username" ],
+      "data[2].userId" : [ "data[2].id" ],
+      "data[2].name" : [ "data[2].username" ]
+    },
+    "optionalFields" : [ "data[0].username" ]
+  }, {
+    "method" : "GET",
+    "path" : "/login/1",
+    "expectedResource" : "user-api-expected-response.json",
+    "expectedStatus" : 200,
+    "responseBody" : {
+      "success" : true,
+      "message" : "Login retrieved successfully",
+      "data" : {
+        "id" : 1,
+        "username" : "bon",
+        "email" : "user1@example.com",
+        "status" : "active"
+      }
+    },
+    "fieldAliases" : {
+      "username" : [ "data.name", "data.username" ],
+      "email" : [ "data.email" ],
+      "id" : [ "data.userId", "data.id" ],
+      "data.userId" : [ "data.id", "data.userId" ],
+      "userId" : [ "data.id" ]
+    },
+    "fallbacks" : {
+      "data.username" : [ "data.name" ],
+      "data.id" : [ "data.userId" ],
+      "data.userId" : [ "data.id" ]
+    },
+    "optionalFields" : [ "data.status", "data.username" ]
+  }, {
+    "method" : "GET",
+    "path" : "/login/2",
+    "expectedResource" : "user-api-expected-response.json",
+    "expectedStatus" : 200,
+    "responseBody" : {
+      "success" : true,
+      "message" : "Login retrieved successfully",
+      "data" : {
+        "id" : 2,
+        "username" : "user2",
+        "email" : "user2@example.com",
+        "status" : "inactive"
+      }
+    },
+    "fieldAliases" : {
+      "data.userId" : [ "data.id", "data.userId" ],
+      "userId" : [ "data.id" ],
+      "id" : [ "data.id" ],
+      "data.name" : [ "data.username", "data.name" ],
+      "name" : [ "data.username" ],
+      "username" : [ "data.username" ]
+    },
+    "fallbacks" : {
+      "data.userId" : [ "data.id" ],
+      "data.name" : [ "data.username" ]
+    },
+    "optionalFields" : [ ]
+  }, {
+    "method" : "GET",
+    "path" : "/login/3",
+    "expectedResource" : "user-api-expected-response.json",
+    "expectedStatus" : 200,
+    "responseBody" : {
+      "success" : true,
+      "message" : "Login retrieved successfully",
+      "data" : {
+        "id" : 3,
+        "username" : "user3",
+        "email" : "user3@example.com",
+        "status" : "inactive"
+      }
+    },
+    "fieldAliases" : {
+      "data.userId" : [ "data.id", "data.userId" ],
+      "userId" : [ "data.id" ],
+      "id" : [ "data.id" ],
+      "data.name" : [ "data.username", "data.name" ],
+      "name" : [ "data.username" ],
+      "username" : [ "data.username" ]
+    },
+    "fallbacks" : {
+      "data.userId" : [ "data.id" ],
+      "data.name" : [ "data.username" ]
+    },
+    "optionalFields" : [ ]
+  } ]
+}

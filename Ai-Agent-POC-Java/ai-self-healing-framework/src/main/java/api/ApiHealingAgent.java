@@ -59,6 +59,8 @@ public class ApiHealingAgent {
                (e.g. if a field value or field name changed).
             5. List any Java step definition code that needs updating
                (e.g. if field names in assertions need to change).
+            6. Prefer returning empty feature/step updates when the framework can
+               remain generic and schema-driven after the JSON update.
 
             Respond ONLY with valid JSON — no markdown fences, no extra text:
             {
